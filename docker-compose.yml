@@ -1,1 +1,46 @@
+version: '3.8'
 
+services:
+  # Database Service: PostGIS
+  db:
+    image: postgis/postgis:15-3.3
+    container_name: ev_spatial_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mysecretpassword
+      POSTGRES_DB: spatial_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # API & ETL Service: FastAPI / Python
+  backend:
+    build: ./backend
+    container_name: ev_fastapi_backend
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://postgres:mysecretpassword@db:5432/spatial_db
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - db
+
+  # Visualization Service: React Dashboard
+  frontend:
+    build: ./frontend
+    container_name: ev_react_frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
