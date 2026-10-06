@@ -34,8 +34,13 @@ services:
     build: ./frontend
     container_name: ev_react_frontend
     restart: always
+    stdin_open: true  # Keeps React dev server interactive
+    tty: true         # Keeps React dev server interactive
     ports:
       - "3000:3000"
+    environment:
+      - HOST=0.0.0.0  # Forces React to listen on all interfaces
+      - CHOKIDAR_USEPOLLING=true # Enables hot reload on Windows/WSL
     volumes:
       - ./frontend:/app
       - /app/node_modules
