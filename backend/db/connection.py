@@ -21,7 +21,7 @@ def get_engine() -> Engine:
         # Fallback URI construct if dynamic individual env vars are preferred
         default_uri = (
             f"postgresql+psycopg://{os.getenv('POSTGRES_USER', 'postgres')}:"
-            f"{os.getenv('POSTGRES_PASSWORD', '')}@"
+            f"{os.getenv('POSTGRES_PASSWORD', 'postgres')}@"
             f"{os.getenv('POSTGRES_HOST', 'localhost')}:"
             f"{os.getenv('POSTGRES_PORT', '5432')}/"
             f"{os.getenv('POSTGRES_DB', 'ev_analytics')}"

@@ -216,3 +216,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Local data snapshots (exceeds GitHub 100MB limit)
+# Ignore all JSON data snapshots and payloads
+backend/ingestion/data/
