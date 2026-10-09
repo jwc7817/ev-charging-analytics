@@ -1,3 +1,4 @@
+import os
 import logging
 from tqdm import tqdm
 from ingestion.extract_afdc import fetch_stations_by_state
@@ -10,6 +11,16 @@ logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
+# Fetch the key from the environment variable set in docker-compose.yml / .env
+api_key = os.getenv("NREL_API_KEY")
+
+if not api_key:
+    logger.warning("NREL_API_KEY not found in environment. Falling back to DEMO_KEY.")
+    api_key = "DEMO_KEY"
+
+
+
+
 def run_pipeline():
     logger.info("Initializing PostGIS schema...")
     init_db_schema()
@@ -20,8 +31,8 @@ def run_pipeline():
 
     logger.info("Starting ingestion...")
 
-    # Wrap dataset iteration in tqdm progress bar
-    station_stream = fetch_stations_by_state(api_key="dwzB...")
+    # Pass the dynamic variable to the generator
+    station_stream = fetch_stations_by_state(api_key=api_key)
     
     with tqdm(desc="Ingesting AFDC Stations", unit=" recs", mininterval=0.5) as pbar:
         for station in station_stream:

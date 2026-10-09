@@ -19,7 +19,7 @@ US_STATES = [
     "DC"
 ]
 
-AFDC_BASE_URL = "https://developer.nrel.gov/api/alt-fuel-stations/v1.json"
+AFDC_BASE_URL = "https://developer.nlr.gov/api/alt-fuel-stations/v1.json"
 LOCAL_DATA_FILE = Path(__file__).resolve().parent / "data" / "afdc_stations.json"
 
 
@@ -71,11 +71,11 @@ def generate_realistic_state_data(state: str) -> List[Dict[str, Any]]:
 def fetch_stations_by_state(
     api_key: str, 
     fuel_type: str = "ELEC", 
-    delay_seconds: float = 0.1
+    delay_seconds: float = 0.2
 ) -> Generator[Dict[str, Any], None, None]:
-    """Yields station records from disk snapshot, live API, or realistic spatial fallback."""
+    """Yields station records from disk snapshot, live NREL API, or realistic spatial fallback."""
     
-    # 1. Check for local offline JSON file first
+    # 1. Local Offline Snapshot
     if LOCAL_DATA_FILE.exists():
         logger.info(f"Loading station dataset from local snapshot: {LOCAL_DATA_FILE}")
         with open(LOCAL_DATA_FILE, "r", encoding="utf-8") as f:
@@ -85,9 +85,42 @@ def fetch_stations_by_state(
                 yield station
         return
 
-    # 2. Offline Fallback Mode when container DNS is blocked ([Errno -5])
-    logger.warning("Container network offline ([Errno -5]). Using realistic multi-state spatial seed generator.")
+    # 2. Live API Extraction across US States
+    session = requests.Session()
+    retries = Retry(total=3, backoff_factor=1, status_forcelist=[429, 500, 502, 503, 504])
+    session.mount("https://", HTTPAdapter(max_retries=retries))
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+
+    logger.info("Local snapshot not found. Attempting live NREL API extraction...")
+    
+    api_success = False
     for state in US_STATES:
-        logger.info(f"Generating realistic spatial records for state: {state}")
-        for record in generate_realistic_state_data(state):
-            yield record
+        params = {
+            "api_key": api_key,
+            "fuel_type": fuel_type,
+            "state": state,
+            "limit": "all"
+        }
+        try:
+            response = session.get(AFDC_BASE_URL, params=params, headers=headers, timeout=10)
+            if response.status_code == 200:
+                api_success = True
+                data = response.json()
+                stations = data.get("fuel_stations", [])
+                logger.info(f"Fetched {len(stations)} records for state: {state}")
+                for station in stations:
+                    yield station
+                time.sleep(delay_seconds)
+            else:
+                logger.warning(f"API request failed for {state} with status {response.status_code}")
+        except Exception as e:
+            logger.error(f"Network error fetching state {state}: {e}")
+            break
+
+    # 3. Fallback Synthetic Generator (Only if API fails completely)
+    if not api_success:
+        logger.warning("Live API failed or network blocked ([Errno -5]). Using realistic multi-state spatial seed generator.")
+        for state in US_STATES:
+            logger.info(f"Generating realistic spatial records for state: {state}")
+            for record in generate_realistic_state_data(state):
+                yield record

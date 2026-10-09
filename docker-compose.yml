@@ -3,6 +3,9 @@ services:
     image: postgis/postgis:15-3.4
     container_name: ev_spatial_db
     restart: always
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-ev_analytics}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
@@ -43,6 +46,10 @@ services:
       dockerfile: Dockerfile
     container_name: ev_backend_api
     restart: always
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+    dns_search: .
     environment:
       POSTGRES_HOST: spatial-db
       POSTGRES_PORT: 5432
