@@ -26,7 +26,7 @@ def read_root():
 
 @app.get("/api/v1/stations")
 def get_charging_stations(
-    limit: int = Query(default=5000, ge=1, le=50000, description="Max station count to return"),
+    limit: int = Query(default=5000, ge=1, le=500000, description="Max station count to return"),
     states: Optional[List[str]] = Query(default=None, description="Multi-state filter (e.g., ?states=CA&states=NY)"),
     db: Session = Depends(get_db_session)
 ):
