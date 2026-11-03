@@ -2,7 +2,14 @@ import React, { useState, useEffect, useCallback } from 'react';
 import SpatialMap from './components/Map/SpatialMap';
 import { fetchStations } from './api/client';
 
-const US_STATES = ['CA', 'NY', 'TX', 'FL', 'NJ', 'GA', 'CO', 'WA', 'MA', 'DC'];
+const US_STATES = [
+  'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA',
+  'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD',
+  'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ',
+  'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC',
+  'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY',
+  'DC'
+];
 const LIMIT_OPTIONS = [500, 1000, 2500, 5000, 10000, 25000];
 
 export default function App() {
