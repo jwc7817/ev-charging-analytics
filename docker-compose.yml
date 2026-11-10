@@ -58,6 +58,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_URI: postgresql+psycopg://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@spatial-db:5432/${POSTGRES_DB:-ev_analytics}
       NREL_API_KEY: ${NREL_API_KEY}
+      GEMINI_API_KEY: ${LLM_API_KEY}
     ports:
       - "8000:8000"
     volumes:

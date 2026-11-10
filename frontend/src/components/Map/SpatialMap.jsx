@@ -57,10 +57,31 @@ export default function SpatialMap({ stations = [], onSelectStation }) {
 
     // Iterate points directly onto the Canvas context ( bypassing React VDOM overhead )
     stations.forEach((station) => {
-      const lat = parseFloat(station.latitude);
-      const lon = parseFloat(station.longitude);
+      let lat, lon;
 
-      if (isNaN(lat) || isNaN(lon)) return;
+      // 1. Check direct properties (latitude / longitude)
+      if (station.latitude !== undefined && station.longitude !== undefined) {
+        lat = parseFloat(station.latitude);
+        lon = parseFloat(station.longitude);
+      } 
+      // 2. Check shortened properties (lat / lng)
+      else if (station.lat !== undefined && station.lng !== undefined) {
+        lat = parseFloat(station.lat);
+        lon = parseFloat(station.lng);
+      } 
+      // 3. Check GeoJSON Feature object format
+      else if (station.geometry && station.geometry.coordinates) {
+        lon = parseFloat(station.geometry.coordinates[0]);
+        lat = parseFloat(station.geometry.coordinates[1]);
+      }
+      // 4. Check top-level properties from LLM SQL returns
+      else if (station.st_y !== undefined && station.st_x !== undefined) {
+        lat = parseFloat(station.st_y);
+        lon = parseFloat(station.st_x);
+      }
+
+      // Validate coordinates before drawing on Canvas
+      if (isNaN(lat) || isNaN(lon) || lat === 0 || lon === 0) return;
 
       const isDCFast = station.ev_dc_fast_num > 0;
       const markerColor = isDCFast ? '#ef4444' : '#3b82f6';
@@ -73,11 +94,11 @@ export default function SpatialMap({ stations = [], onSelectStation }) {
         weight: 1,
       });
 
-      // // Bind interactive tooltips and click events directly to Canvas objects
-      // marker.bindTooltip(`<b>${station.station_name}</b><br/>${station.state} | ${station.total_capacity_kw || 0} kW`, {
-      //   direction: 'top',
-      //   sticky: true,
-      // });
+      // Bind interactive tooltips and click events directly to Canvas objects
+      marker.bindTooltip(`<b>${station.station_name}</b><br/>${station.state} | ${station.total_capacity_kw || 0} kW`, {
+        direction: 'top',
+        sticky: true,
+      });
 
       marker.on('click', () => {
         if (onSelectStation) {
